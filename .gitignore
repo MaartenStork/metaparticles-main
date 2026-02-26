@@ -1,0 +1,20 @@
+# LAMMPS build (too large, users compile locally)
+lammps-22Jul2025/
+lammps-stable.tar.gz
+
+# Simulation output
+*.lammpstrj
+log.lammps
+info_mass.dat
+test.data
+energy.dat
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated structures (reproducible from write_structures.py)
+structures/
+
+# OS
+.DS_Store

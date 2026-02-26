@@ -1,0 +1,110 @@
+# mpirun -np 4 lmp_radial -i self_assembly.lmp -v ktilt 12.0 -v ksplay 2.0 -v N 1500 -v rcut 2.5 -v wc 1.8 -v zeta 4.0 -v eps 1.0 -v T 0.2
+
+
+variable v_rcut string ${rcut}
+variable v_splay string ${ksplay}
+variable v_tilt string ${ktilt}
+variable v_wc string ${wc}
+variable v_N string ${N}
+variable v_zeta string ${zeta}
+variable v_eps string ${eps}
+variable v_T string ${T}
+
+
+variable t_dump equal 1000
+
+units           lj
+atom_style      hybrid sphere dipole molecular
+neighbor 1.0 bin
+neigh_modify delay 0 every 1 check yes
+
+dimension       3
+boundary        p p p
+
+
+region myreg block -14 14 -14 14 -14 14
+create_box 1 myreg
+create_atoms 1 random ${v_N} 341341 NULL overlap 1.0  maxtry 100
+set type 1  dipole/random 341341 1.0
+
+
+
+variable my_diameter equal 4.0
+set      type 1 diameter ${my_diameter}
+variable my_volume equal (4.0/3.0)*PI*((${my_diameter}*0.5)^3)
+# in principle i want to keep my mass fixed for unit conversions! density I dont really care
+variable my_mass equal 1.0
+variable my_density equal ${my_mass}/${my_volume}
+set      type 1 density ${my_density}
+print    "m:${my_mass} V:${my_volume} rho:${my_density}" file info_mass.dat screen yes
+
+
+#********************************************************************************
+# Various computes
+#********************************************************************************
+compute E_kin_trans all ke
+compute E_kin_rot all erotate/sphere
+compute E_pot all pe
+variable E_tot equal c_E_pot+c_E_kin_trans+c_E_kin_rot
+compute Tall all temp/sphere dof all
+# compute a all temp
+
+
+# Nevery = input values this every timesteps
+# Nrepeat = # of times input values should be read before averaging (usually 1, no averaging)
+# Nfreq = calculate averages every this time step
+fix fix_energies all ave/time ${t_dump} 1 ${t_dump}  v_E_tot c_E_pot c_E_kin_trans c_E_kin_rot file energy.dat
+
+
+thermo_style custom step spcpu temp c_E_pot c_E_kin_trans c_E_kin_rot v_E_tot
+thermo ${t_dump}
+
+##############################
+######## PAIR STYLE ##########
+##############################
+
+# global cutoff DEBUG
+pair_style      membrane_sillanov2 ${v_rcut}
+# i j sigma eps ktilt ksplay rcut weightflag weight_rc
+
+pair_coeff      1 1 1.0 ${v_eps} ${v_tilt} ${v_splay} ${v_rcut} ${v_wc} ${v_zeta} 0.0
+
+# dump coords all custom ${t_dump} position.lammpstrj id type xu yu zu ix iy iz vx vy vz mux muy muz omegax omegay omegaz fx fy fz tqx tqy tqz
+
+dump coords all custom ${t_dump} position.lammpstrj id type xu yu zu ix iy iz mux muy muz
+
+timestep        0.01
+
+# fix      f_brown all brownian/sphere 1.0 1294019 gamma_t 100.0 gamma_r 100.0
+
+fix             f_nve all nve/sphere update dipole
+# damp smalller, more viscous
+fix fLANG   all   langevin ${v_T} ${v_T} 1.0 123 zero yes omega yes
+fix_modify fLANG temp Tall
+run 50000
+
+
+# unfix fLANG
+# fix fLANG   all   langevin 0.1 0.2 0.1 123 zero yes omega yes
+# fix_modify fLANG temp Tall
+# run 500000
+# write_data after_700k_steps.data
+#
+# unfix fLANG
+# fix fLANG   all   langevin 0.2 0.2 0.1 123 zero yes omega yes
+# fix_modify fLANG temp Tall
+# run 500000
+
+
+
+# write_data after_600k_steps.data
+# run 500000
+# run 500000
+# run 500000
+
+# unfix fLANG
+# fix fLANG   all   langevin 1.0 1.0 0.05 123 zero yes
+# fix_modify fLANG temp Tall
+# run 500000
+#
+# write_data dissip_config.data
