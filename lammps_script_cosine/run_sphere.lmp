@@ -53,9 +53,9 @@ variable my_press equal -0.0
 pair_style hybrid membrane_sillanov2 ${v_rcut} cosine/squared 3.0 lj/cut 2.5
 # i j eps sigma ktilt ksplay rcut wc zeta C0
 pair_coeff 1 1 membrane_sillanov2 1.0 1.0 ${v_tilt} ${v_splay} ${v_rcut} ${v_wc} ${v_zeta} 0.0
-# Default: all MP-MP pairs (LJ)
+# Default: all MP-MP pairs
 pair_coeff 2*61 2*61 lj/cut 1.0 2.5 2.5
-# Default: all membrane-MP pairs (cosine/squared)
+# Default: all membrane-MP pairs
 pair_coeff 1 2*61 cosine/squared 5.0 1.75 1.80 wca
 # Override specific MP beads here, e.g.:
 # pair_coeff 1 5 cosine/squared 2.0 1.75 1.85

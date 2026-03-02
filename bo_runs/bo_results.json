@@ -1,0 +1,692 @@
+[
+  {
+    "eval_id": 0,
+    "epsilons": [
+      8.722531795501709,
+      2.3793801069259644,
+      7.541367530822754
+    ],
+    "objective": 0.965081874567705,
+    "z_com": 7.1878676666666665,
+    "x_com": 2.3404705066666662,
+    "y_com": -2.151812766166666,
+    "mp_separation": 1.0,
+    "inside_score": 0.9998,
+    "gated_sep": 0.9998,
+    "gated_cov": 0.9903,
+    "coverage": 0.9905,
+    "integrity": 0.8404,
+    "gap": 1.783,
+    "radial_ratio": 0.5651,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 28,
+    "contacts": 3469,
+    "mp_radius": 3.599,
+    "mem_radius": 13.75,
+    "status": "success",
+    "wall_time_s": 214.44918608665466
+  },
+  {
+    "eval_id": 1,
+    "epsilons": [
+      1.3511800691485405,
+      7.35917255282402,
+      1.1298727542161942
+    ],
+    "objective": 0.17054352110485027,
+    "z_com": 14.488068333333333,
+    "x_com": -1.3344304833333338,
+    "y_com": 7.703866833333332,
+    "mp_separation": 1.0,
+    "inside_score": 0.0006,
+    "gated_sep": 0.0006,
+    "gated_cov": 0.0006,
+    "coverage": 0.9934,
+    "integrity": 0.8502,
+    "gap": 1.762,
+    "radial_ratio": 1.0953,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 16,
+    "contacts": 3045,
+    "mp_radius": 3.588,
+    "mem_radius": 15.009,
+    "status": "success",
+    "wall_time_s": 194.73183178901672
+  },
+  {
+    "eval_id": 2,
+    "epsilons": [
+      3.9515276551246643,
+      4.106299243867397,
+      6.415842592716217
+    ],
+    "objective": 0.16920039151305608,
+    "z_com": 15.079928333333335,
+    "x_com": 5.693796166666666,
+    "y_com": -5.041969000000001,
+    "mp_separation": 1.0,
+    "inside_score": 0.0003,
+    "gated_sep": 0.0003,
+    "gated_cov": 0.0003,
+    "coverage": 0.9924,
+    "integrity": 0.8449,
+    "gap": 1.812,
+    "radial_ratio": 1.1241,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 16,
+    "contacts": 3372,
+    "mp_radius": 3.48,
+    "mem_radius": 15.002,
+    "status": "success",
+    "wall_time_s": 209.39290118217468
+  },
+  {
+    "eval_id": 3,
+    "epsilons": [
+      6.0723631754517555,
+      5.132260844111443,
+      4.757277689874172
+    ],
+    "objective": 0.17028897925334194,
+    "z_com": 15.46658333333333,
+    "x_com": 3.9982977833333333,
+    "y_com": 7.095150666666669,
+    "mp_separation": 1.0,
+    "inside_score": 0.0001,
+    "gated_sep": 0.0001,
+    "gated_cov": 0.0001,
+    "coverage": 0.9915,
+    "integrity": 0.8509,
+    "gap": 1.817,
+    "radial_ratio": 1.1491,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 2,
+    "contacts": 3232,
+    "mp_radius": 3.48,
+    "mem_radius": 15.194,
+    "status": "success",
+    "wall_time_s": 196.8669400215149
+  },
+  {
+    "eval_id": 4,
+    "epsilons": [
+      5.5584229826927185,
+      3.350958429276943,
+      2.950686179101467
+    ],
+    "objective": 0.17044825378802775,
+    "z_com": 16.174908333333327,
+    "x_com": 3.407883360000001,
+    "y_com": 2.999346205733333,
+    "mp_separation": 1.0,
+    "inside_score": 0.0004,
+    "gated_sep": 0.0004,
+    "gated_cov": 0.0004,
+    "coverage": 0.9905,
+    "integrity": 0.8505,
+    "gap": 1.784,
+    "radial_ratio": 1.1077,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 6,
+    "contacts": 3184,
+    "mp_radius": 3.483,
+    "mem_radius": 15.132,
+    "status": "success",
+    "wall_time_s": 175.4082260131836
+  },
+  {
+    "eval_id": 5,
+    "epsilons": [
+      4.437102951109409,
+      6.387540623545647,
+      8.34680849313736
+    ],
+    "objective": 0.16974891288255933,
+    "z_com": 14.783236666666665,
+    "x_com": -2.989200125166667,
+    "y_com": -5.179826166666669,
+    "mp_separation": 1.0,
+    "inside_score": 0.0015,
+    "gated_sep": 0.0015,
+    "gated_cov": 0.0015,
+    "coverage": 0.9934,
+    "integrity": 0.8427,
+    "gap": 1.809,
+    "radial_ratio": 1.0664,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 11,
+    "contacts": 3560,
+    "mp_radius": 3.495,
+    "mem_radius": 14.92,
+    "status": "success",
+    "wall_time_s": 216.97024607658386
+  },
+  {
+    "eval_id": 6,
+    "epsilons": [
+      2.771793618798256,
+      1.1403967216610909,
+      3.0762261897325516
+    ],
+    "objective": 0.05997591918256702,
+    "z_com": 18.73376833333333,
+    "x_com": 1.14561158,
+    "y_com": 4.033711233333333,
+    "mp_separation": 1.0,
+    "inside_score": 0.0,
+    "gated_sep": 0.0,
+    "gated_cov": 0.0,
+    "coverage": 0.7271,
+    "integrity": 0.2999,
+    "gap": 1.8,
+    "radial_ratio": 1.2678,
+    "n_mem_clusters": 3,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 2,
+    "contacts": 1856,
+    "mp_radius": 3.47,
+    "mem_radius": 15.123,
+    "status": "success",
+    "wall_time_s": 155.46492505073547
+  },
+  {
+    "eval_id": 7,
+    "epsilons": [
+      7.142661206424236,
+      8.098094910383224,
+      5.719418831169605
+    ],
+    "objective": 0.16991084598223424,
+    "z_com": 16.33067,
+    "x_com": -2.103768133333333,
+    "y_com": 2.1742245749999998,
+    "mp_separation": 1.0,
+    "inside_score": 0.0007,
+    "gated_sep": 0.0007,
+    "gated_cov": 0.0007,
+    "coverage": 0.9924,
+    "integrity": 0.8466,
+    "gap": 1.825,
+    "radial_ratio": 1.0907,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 3,
+    "contacts": 3462,
+    "mp_radius": 3.47,
+    "mem_radius": 15.19,
+    "status": "success",
+    "wall_time_s": 172.16869020462036
+  },
+  {
+    "eval_id": 8,
+    "epsilons": [
+      8.852079385058916,
+      2.31390437930589,
+      7.467002584428434
+    ],
+    "objective": 0.17376348083873788,
+    "z_com": 18.58295666666667,
+    "x_com": -0.9018151583333334,
+    "y_com": 3.563440066666667,
+    "mp_separation": 1.0,
+    "inside_score": 0.0,
+    "gated_sep": 0.0,
+    "gated_cov": 0.0,
+    "coverage": 0.7268,
+    "integrity": 0.8688,
+    "gap": 1.808,
+    "radial_ratio": 1.2465,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 0,
+    "contacts": 2212,
+    "mp_radius": 3.481,
+    "mem_radius": 15.177,
+    "status": "success",
+    "wall_time_s": 165.02901101112366
+  },
+  {
+    "eval_id": 9,
+    "epsilons": [
+      8.69699151163063,
+      2.3923653247760464,
+      7.55594340973427
+    ],
+    "objective": 0.17275501503392882,
+    "z_com": 18.563233333333326,
+    "x_com": 1.4547269333333326,
+    "y_com": -0.5678184249999999,
+    "mp_separation": 1.0,
+    "inside_score": 0.0,
+    "gated_sep": 0.0,
+    "gated_cov": 0.0,
+    "coverage": 0.7764,
+    "integrity": 0.8638,
+    "gap": 1.804,
+    "radial_ratio": 1.2466,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 10,
+    "contacts": 2401,
+    "mp_radius": 3.476,
+    "mem_radius": 14.921,
+    "status": "success",
+    "wall_time_s": 160.19418716430664
+  },
+  {
+    "eval_id": 10,
+    "epsilons": [
+      5.480622373521328,
+      4.879527568817139,
+      5.016773849725723
+    ],
+    "objective": 0.1707362586035205,
+    "z_com": 17.204443333333337,
+    "x_com": 4.2608308,
+    "y_com": 1.4313615049999997,
+    "mp_separation": 1.0,
+    "inside_score": 0.0001,
+    "gated_sep": 0.0001,
+    "gated_cov": 0.0001,
+    "coverage": 0.985,
+    "integrity": 0.8534,
+    "gap": 1.817,
+    "radial_ratio": 1.1688,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 0,
+    "contacts": 3135,
+    "mp_radius": 3.458,
+    "mem_radius": 15.186,
+    "status": "success",
+    "wall_time_s": 160.8502321243286
+  },
+  {
+    "eval_id": 11,
+    "epsilons": [
+      3.7695503383874893,
+      3.346233680844307,
+      7.485165990889072
+    ],
+    "objective": 0.17059701193625323,
+    "z_com": 15.42128833333334,
+    "x_com": 3.4596747300000006,
+    "y_com": -3.0094486333333332,
+    "mp_separation": 1.0,
+    "inside_score": 0.0013,
+    "gated_sep": 0.0013,
+    "gated_cov": 0.0013,
+    "coverage": 0.9915,
+    "integrity": 0.8477,
+    "gap": 1.796,
+    "radial_ratio": 1.0706,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 7,
+    "contacts": 3317,
+    "mp_radius": 3.538,
+    "mem_radius": 14.989,
+    "status": "success",
+    "wall_time_s": 194.66258883476257
+  },
+  {
+    "eval_id": 12,
+    "epsilons": [
+      8.73254757942671,
+      2.374287267937318,
+      7.5356514558854695
+    ],
+    "objective": 0.17270575513267739,
+    "z_com": 18.23068666666667,
+    "x_com": -0.06916583333333332,
+    "y_com": 1.5378754999999997,
+    "mp_separation": 1.0,
+    "inside_score": 0.0,
+    "gated_sep": 0.0,
+    "gated_cov": 0.0,
+    "coverage": 0.7674,
+    "integrity": 0.8635,
+    "gap": 1.801,
+    "radial_ratio": 1.2203,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 6,
+    "contacts": 2458,
+    "mp_radius": 3.466,
+    "mem_radius": 14.968,
+    "status": "success",
+    "wall_time_s": 163.77565908432007
+  },
+  {
+    "eval_id": 13,
+    "epsilons": [
+      8.789741955697536,
+      2.9112295284867287,
+      8.357256963849068
+    ],
+    "objective": 0.17256423212000926,
+    "z_com": 18.38408166666667,
+    "x_com": 3.368277802633334,
+    "y_com": 0.7304346899999999,
+    "mp_separation": 1.0,
+    "inside_score": 0.0,
+    "gated_sep": 0.0,
+    "gated_cov": 0.0,
+    "coverage": 0.7909,
+    "integrity": 0.8628,
+    "gap": 1.81,
+    "radial_ratio": 1.2387,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 4,
+    "contacts": 2501,
+    "mp_radius": 3.501,
+    "mem_radius": 15.079,
+    "status": "success",
+    "wall_time_s": 169.1740539073944
+  },
+  {
+    "eval_id": 14,
+    "epsilons": [
+      8.11073561757803,
+      1.2916822582483292,
+      7.192486479878426
+    ],
+    "objective": 0.17394368462475154,
+    "z_com": 18.685381666666665,
+    "x_com": -0.8147707333333336,
+    "y_com": 1.8622621116666667,
+    "mp_separation": 1.0,
+    "inside_score": 0.0,
+    "gated_sep": 0.0,
+    "gated_cov": 0.0,
+    "coverage": 0.7152,
+    "integrity": 0.8697,
+    "gap": 1.775,
+    "radial_ratio": 1.2377,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 2,
+    "contacts": 2115,
+    "mp_radius": 3.494,
+    "mem_radius": 15.164,
+    "status": "success",
+    "wall_time_s": 239.30448079109192
+  },
+  {
+    "eval_id": 15,
+    "epsilons": [
+      8.943155765533447,
+      3.704013504087925,
+      7.52679218351841
+    ],
+    "objective": 0.17095705281758247,
+    "z_com": 15.54324166666667,
+    "x_com": 3.210332148333332,
+    "y_com": 0.5933868650000004,
+    "mp_separation": 1.0,
+    "inside_score": 0.0026,
+    "gated_sep": 0.0026,
+    "gated_cov": 0.0026,
+    "coverage": 0.9896,
+    "integrity": 0.8443,
+    "gap": 1.788,
+    "radial_ratio": 1.048,
+    "n_mem_clusters": 2,
+    "mp_beads_separated": 60,
+    "n_mem_noise": 9,
+    "contacts": 3488,
+    "mp_radius": 3.55,
+    "mem_radius": 15.113,
+    "status": "success",
+    "wall_time_s": 2427.9518768787384
+  },
+  {
+    "eval_id": 16,
+    "epsilons": [
+      8.111859276890755,
+      2.5679472237825394,
+      6.222250059247017
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.8450198173522949
+  },
+  {
+    "eval_id": 17,
+    "epsilons": [
+      7.776584632694721,
+      2.2164013013243675,
+      8.476823665201664
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.8383049964904785
+  },
+  {
+    "eval_id": 18,
+    "epsilons": [
+      8.349243149161339,
+      1.2699498906731606,
+      8.743689976632595
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.818321943283081
+  },
+  {
+    "eval_id": 19,
+    "epsilons": [
+      8.507609523832798,
+      2.527281805872917,
+      6.250075124204159
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.8317830562591553
+  },
+  {
+    "eval_id": 20,
+    "epsilons": [
+      8.621249720454216,
+      2.858097679913044,
+      6.637027949094772
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.8703453540802002
+  },
+  {
+    "eval_id": 21,
+    "epsilons": [
+      8.72255551815033,
+      2.441882774233818,
+      6.95600488781929
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6494970321655273
+  },
+  {
+    "eval_id": 22,
+    "epsilons": [
+      8.638414658606052,
+      1.7680378258228302,
+      6.884801991283894
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6254968643188477
+  },
+  {
+    "eval_id": 23,
+    "epsilons": [
+      8.185974948108196,
+      2.4101991578936577,
+      7.730944566428661
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6370019912719727
+  },
+  {
+    "eval_id": 24,
+    "epsilons": [
+      8.095529019832611,
+      2.2536232620477676,
+      7.439105674624443
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6385579109191895
+  },
+  {
+    "eval_id": 25,
+    "epsilons": [
+      8.594496756792068,
+      2.4082261472940445,
+      8.270582355558872
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.671055793762207
+  },
+  {
+    "eval_id": 26,
+    "epsilons": [
+      8.390698254108429,
+      2.0940639302134514,
+      6.424575813114643
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.7077717781066895
+  },
+  {
+    "eval_id": 27,
+    "epsilons": [
+      8.642618425190449,
+      3.1480070799589157,
+      7.728400267660618
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.619236946105957
+  },
+  {
+    "eval_id": 28,
+    "epsilons": [
+      8.28710687160492,
+      2.580131433904171,
+      7.560397759079933
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.7492759227752686
+  },
+  {
+    "eval_id": 29,
+    "epsilons": [
+      8.423157945275307,
+      2.3857463896274567,
+      7.035297282040119
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6683290004730225
+  },
+  {
+    "eval_id": 30,
+    "epsilons": [
+      8.678106667251411,
+      1.9081539475863385,
+      7.450639329392104
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.7333660125732422
+  },
+  {
+    "eval_id": 31,
+    "epsilons": [
+      8.141787245869637,
+      2.9220283180475235,
+      6.989522971212864
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6448180675506592
+  },
+  {
+    "eval_id": 32,
+    "epsilons": [
+      8.506617166101933,
+      2.722292847931385,
+      8.045842669904232
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6712100505828857
+  },
+  {
+    "eval_id": 33,
+    "epsilons": [
+      8.47874856779476,
+      2.252444116310717,
+      7.5774933551166175
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 1.0201802253723145
+  },
+  {
+    "eval_id": 34,
+    "epsilons": [
+      8.35958892852068,
+      2.782300777733326,
+      7.5826083570718765
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6647839546203613
+  },
+  {
+    "eval_id": 35,
+    "epsilons": [
+      8.687724947929382,
+      1.2567328587174416,
+      7.7057215720415115
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6534280776977539
+  },
+  {
+    "eval_id": 36,
+    "epsilons": [
+      7.915483944118023,
+      2.9068653434515,
+      6.3073985651135445
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6814620494842529
+  },
+  {
+    "eval_id": 37,
+    "epsilons": [
+      8.79081742465496,
+      2.6248227804899216,
+      6.361666679382324
+    ],
+    "objective": -1000000.0,
+    "status": "failed",
+    "wall_time_s": 0.6558561325073242
+  }
+]
