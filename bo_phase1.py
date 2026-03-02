@@ -115,11 +115,11 @@ def write_lammps_input(epsilons, groups, output_path):
         out_lines.append(line)
 
         # After the default membrane-MP pair_coeff line, insert overrides
-        if stripped.startswith("pair_coeff 1 2*61 lj/cut"):
+        if stripped.startswith("pair_coeff 1 2*61 cosine/squared"):
             for ltype in sorted(type_to_eps.keys()):
                 eps = type_to_eps[ltype]
                 out_lines.append(
-                    f"pair_coeff 1 {ltype} lj/cut {eps:.6f} 1.75 2.5\n"
+                    f"pair_coeff 1 {ltype} cosine/squared {eps:.6f} 1.75 1.85 wca\n"
                 )
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -148,7 +148,7 @@ def run_simulation(lmp_input, run_dir):
     ]
 
     # Total steps: 1000 (warmup) + 250000 (production) = 251000
-    total_steps = 251000
+    total_steps = 500100
     stdout_log = open(os.path.join(run_dir, "stdout.log"), "w")
     stderr_log = open(os.path.join(run_dir, "stderr.log"), "w")
 
@@ -252,174 +252,25 @@ def parse_last_frame(dump_path):
 
 def endocytosis_score(mp_positions, mem_positions):
     """
-    Clustering-based endocytosis detection.
+    Did the MP pass through the membrane?
 
-    The KEY idea: run DBSCAN on ALL particles (membrane + MP) together.
-    - If the MP has truly passed through the membrane and is floating inside
-      with a gap, DBSCAN will assign MP beads to their OWN cluster, separate
-      from the membrane cluster. This is the SUCCESS signal.
-    - If the MP is stuck in the membrane wall, wrapped on the surface, or
-      touching the membrane, MP beads will be in the SAME cluster as membrane
-      beads. This is NOT success.
-
-    Four signals combined into [0, 1]:
-
-    1. MP SEPARATION × INSIDE (weight 0.50):
-       DBSCAN on all particles — are MP beads NOT in a membrane cluster?
-       Gated by radial position — is MP COM inside the membrane sphere?
-       separation × inside_score:
-       - separated + inside  = 1.0 (true endocytosis!)
-       - separated + outside = 0.0 (bud formation, not endocytosis)
-       - not separated       = 0.0 (stuck in membrane wall)
-
-    2. SOLID ANGLE COVERAGE (weight 0.30):
-       What fraction of directions from MP COM have membrane beads?
-
-    3. MEMBRANE INTEGRITY (weight 0.20):
-       Is the membrane still one connected piece? Rupture = bad.
-
-    Outcomes:
-        Bounced off (far):     gsep=0  cov≈0.0  int=1.0  → 0.20
-        Surface contact:       gsep=0  cov≈0.5  int=1.0  → 0.35
-        Partial wrap:          gsep=0  cov≈0.7  int=1.0  → 0.41
-        Bud (wrapped outside): gsep=0  cov≈0.9  int=1.0  → 0.47  (caught!)
-        Stuck in membrane:     gsep=0  cov≈0.9  int=1.0  → 0.47
-        Fully inside + gap:    gsep=1  cov≈0.9  int=1.0  → 0.97 ★
-        Membrane ruptured:     gsep=?  cov=var  int≈0.3  → 0.3-0.5
+    Score = sigmoid(r/R), where r = MP COM distance from membrane center,
+    R = median membrane radius. ~1 when inside, ~0 when outside.
 
     Returns: (score, details_dict)
     """
-    from scipy.spatial import cKDTree
-    from sklearn.cluster import DBSCAN
-
     mp_com = mp_positions.mean(axis=0)
-    mp_radius = np.max(np.linalg.norm(mp_positions - mp_com, axis=1))
-    n_mp = len(mp_positions)
 
     mem_com = mem_positions.mean(axis=0)
     mem_dists = np.linalg.norm(mem_positions - mem_com, axis=1)
     mem_radius = np.median(mem_dists)
 
-    # ── 1. DBSCAN on ALL particles ──────────────────────────────────────
-    # Combine membrane + MP positions, track which are MP
-    all_positions = np.vstack([mem_positions, mp_positions])
-    is_mp = np.zeros(len(all_positions), dtype=bool)
-    is_mp[len(mem_positions):] = True
-
-    # eps=1.0: membrane beads (spacing ~0.85) stay connected,
-    # but any MP bead further than 1.0 from the membrane won't merge in.
-    # Small eps = strict separation detection.
-    db = DBSCAN(eps=1.0, min_samples=3).fit(all_positions)
-    labels = db.labels_
-
-    mp_labels = labels[is_mp]
-    mem_labels = labels[~is_mp]
-
-    mem_cluster_ids = set(mem_labels) - {-1}
-
-    # Count MP beads that ended up in a membrane cluster (= stuck/touching).
-    # Everything else (own cluster OR noise) = separated from membrane.
-    mp_in_mem_cluster = sum(
-        int(np.sum(mp_labels == c)) for c in mem_cluster_ids
-    )
-    mp_beads_separated = n_mp - mp_in_mem_cluster
-    mp_separation = mp_beads_separated / n_mp if n_mp > 0 else 0.0
-
-    # ── 2. Solid angle coverage ─────────────────────────────────────────
-    n_theta, n_phi = 12, 18
-    thetas = np.linspace(0, np.pi, n_theta + 1)
-    phis = np.linspace(-np.pi, np.pi, n_phi + 1)
-
-    coverage_cutoff = mem_radius + 5.0
-
-    vecs = mem_positions - mp_com
-    dists_to_mp = np.linalg.norm(vecs, axis=1)
-    nearby = dists_to_mp < coverage_cutoff
-    vecs_nearby = vecs[nearby]
-    dists_nearby = dists_to_mp[nearby]
-
-    if len(vecs_nearby) == 0:
-        coverage = 0.0
-    else:
-        unit_v = vecs_nearby / dists_nearby[:, None]
-        beam_theta = np.arccos(np.clip(unit_v[:, 2], -1, 1))
-        beam_phi = np.arctan2(unit_v[:, 1], unit_v[:, 0])
-
-        theta_bins = np.clip(np.digitize(beam_theta, thetas) - 1, 0, n_theta - 1)
-        phi_bins = np.clip(np.digitize(beam_phi, phis) - 1, 0, n_phi - 1)
-
-        bin_centers_theta = 0.5 * (thetas[:-1] + thetas[1:])
-        bin_weights = np.sin(bin_centers_theta)
-        bin_weights /= bin_weights.sum()
-
-        occupied = np.zeros((n_theta, n_phi), dtype=bool)
-        occupied[theta_bins, phi_bins] = True
-
-        weighted_occ = 0.0
-        for ti in range(n_theta):
-            weighted_occ += bin_weights[ti] * (occupied[ti].sum() / n_phi)
-        coverage = float(weighted_occ)
-
-    # ── 3. Membrane integrity ───────────────────────────────────────────
-    n_mem_clusters = len(mem_cluster_ids)
-    n_noise = int((mem_labels == -1).sum())
-    noise_frac = n_noise / len(mem_positions) if len(mem_positions) > 0 else 0
-
-    if n_mem_clusters == 1:
-        integrity = 1.0
-    elif n_mem_clusters == 2:
-        sizes = [np.sum(mem_labels == c) for c in mem_cluster_ids]
-        ratio = min(sizes) / max(sizes)
-        integrity = 0.6 + 0.3 * (1 - ratio)
-    else:
-        integrity = max(0.0, 0.4 - 0.1 * (n_mem_clusters - 2))
-    integrity *= (1.0 - noise_frac)
-
-    # ── 4. Radial position: is MP inside the membrane sphere? ──────────
-    # Without this, bud formation (wrapped on outside) looks identical
-    # to true endocytosis (floating inside).
     mp_dist_from_center = float(np.linalg.norm(mp_com - mem_com))
     radial_ratio = mp_dist_from_center / mem_radius if mem_radius > 0 else 999
-    # ratio < 1 = inside, ratio > 1 = outside
-    # Smooth sigmoid: 1.0 when deep inside, 0.0 when at/outside the shell
-    # Steep transition around ratio = 0.85 (must be well inside, not near wall)
-    inside_score = 1.0 / (1.0 + np.exp(30.0 * (radial_ratio - 0.85)))
-    inside_score = float(inside_score)
-
-    # ── Diagnostics ─────────────────────────────────────────────────────
-    mp_tree = cKDTree(mp_positions)
-    mem_tree = cKDTree(mem_positions)
-    min_dists, _ = mem_tree.query(mp_positions, k=1)
-    gap = float(np.min(min_dists))
-
-    contact_pairs = mp_tree.query_ball_tree(mem_tree, r=3.0)
-    contacts = sum(len(c) for c in contact_pairs)
-
-    # ── Combine ─────────────────────────────────────────────────────────
-    # separation × inside_score acts as a gate:
-    #   - separated + inside  → high (true endocytosis)
-    #   - separated + outside → low  (bud / bounced)
-    #   - not separated       → low  (stuck in membrane)
-    gated_sep = mp_separation * inside_score
-    gated_cov = coverage * inside_score
-
-    w_sep, w_cov, w_int = 0.50, 0.30, 0.20
-    score = w_sep * gated_sep + w_cov * gated_cov + w_int * integrity
+    score = max(0.0, 1.0 - radial_ratio)
 
     details = {
-        "mp_separation": round(float(mp_separation), 4),
-        "inside_score": round(inside_score, 4),
-        "gated_sep": round(float(gated_sep), 4),
-        "gated_cov": round(float(gated_cov), 4),
-        "coverage": round(coverage, 4),
-        "integrity": round(integrity, 4),
-        "gap": round(gap, 3),
         "radial_ratio": round(radial_ratio, 4),
-        "n_mem_clusters": n_mem_clusters,
-        "mp_beads_separated": int(mp_beads_separated),
-        "n_mem_noise": n_noise,
-        "contacts": contacts,
-        "mp_radius": round(float(mp_radius), 3),
         "mem_radius": round(float(mem_radius), 3),
     }
 
@@ -525,24 +376,20 @@ def run_bo(n_initial=10, n_iter=100, resume=True):
             return
         best_obj = max(r["objective"] for r in successful)
         print(f"\n    {'eval':>4s}  {'eps_0':>6s} {'eps_1':>6s} {'eps_2':>6s}  "
-              f"{'score':>5s}  {'gsep':>5s} {'cov':>5s} {'int':>4s} {'r/R':>5s}  "
-              f"{'time':>5s}  {'':>2s}")
-        print(f"    {'─' * 75}")
+              f"{'score':>5s}  {'r/R':>5s}  {'time':>5s}  {'':>2s}")
+        print(f"    {'─' * 55}")
         for r in results:
             if r.get("status") == "success":
                 marker = " ★" if r["objective"] == best_obj else ""
                 print(f"    {r['eval_id']:>4d}  "
                       f"{r['epsilons'][0]:>6.3f} {r['epsilons'][1]:>6.3f} {r['epsilons'][2]:>6.3f}  "
                       f"{r['objective']:>5.3f}  "
-                      f"{r.get('gated_sep', 0):>5.3f} "
-                      f"{r.get('coverage', 0):>5.3f} "
-                      f"{r.get('integrity', 0):>4.2f} "
                       f"{r.get('radial_ratio', 0):>5.2f}  "
                       f"{r.get('wall_time_s', 0):>5.0f}s{marker}")
             else:
                 print(f"    {r['eval_id']:>4d}  "
                       f"{r['epsilons'][0]:>6.3f} {r['epsilons'][1]:>6.3f} {r['epsilons'][2]:>6.3f}  "
-                      f"{'FAIL':>5s}  {'─':>5s} {'─':>5s} {'─':>4s} {'─':>5s}  "
+                      f"{'FAIL':>5s}  {'─':>5s}  "
                       f"{r.get('wall_time_s', 0):>5.0f}s")
 
     def evaluate(epsilons, eval_id):
@@ -569,16 +416,9 @@ def run_bo(n_initial=10, n_iter=100, resume=True):
         metadata["wall_time_s"] = wall_time
 
         print(f"{'─' * 65}")
-        print(f"  ✓ score     = {obj:.3f}  (1.0 = fully endocytosed)")
-        print(f"    gated_sep = {metadata.get('gated_sep', 0):.3f}  "
-              f"(sep={metadata.get('mp_separation', 0):.2f} × "
-              f"inside={metadata.get('inside_score', 0):.2f}  "
-              f"r/R={metadata.get('radial_ratio', 0):.2f})")
-        print(f"    coverage  = {metadata.get('coverage', 0):.3f}")
-        print(f"    integrity = {metadata.get('integrity', 0):.3f}  "
-              f"(membrane clusters: {metadata.get('n_mem_clusters', '?')})")
-        print(f"    gap       = {metadata.get('gap', 0):.3f}")
-        print(f"    wall time = {wall_time:.1f}s")
+        print(f"  ✓ score = {obj:.3f}  "
+              f"(r/R={metadata.get('radial_ratio', 0):.2f})  "
+              f"time={wall_time:.0f}s")
 
         return obj, metadata
 
@@ -644,15 +484,9 @@ def run_bo(n_initial=10, n_iter=100, resume=True):
     if successful:
         best = max(successful, key=lambda r: r["objective"])
         print(f"Best result: eval {best['eval_id']}")
-        print(f"  epsilons   = {best['epsilons']}")
-        print(f"  score      = {best['objective']:.3f}")
-        print(f"  gated_sep  = {best.get('gated_sep', '?')} "
-              f"(sep={best.get('mp_separation', '?')} × "
-              f"inside={best.get('inside_score', '?')})")
-        print(f"  r/R        = {best.get('radial_ratio', '?')}")
-        print(f"  coverage   = {best.get('coverage', '?')}")
-        print(f"  integrity  = {best.get('integrity', '?')} "
-              f"(clusters: {best.get('n_mem_clusters', '?')})")
+        print(f"  epsilons = {best['epsilons']}")
+        print(f"  score    = {best['objective']:.3f}")
+        print(f"  r/R      = {best.get('radial_ratio', '?')}")
 
 
 # ---------------------------------------------------------------------------
