@@ -250,14 +250,20 @@ def parse_last_frame(dump_path):
     return atoms
 
 
-def solid_angle_coverage(mp_positions, mem_positions, contact_cutoff=1.85, n_bins=50):
+def solid_angle_coverage(mp_positions, mem_positions, contact_cutoff=1.85, n_bins=12):
     """
     Compute the fraction of the unit sphere around the MP COM that is covered
-    by contacting membrane beads. Uses a HEALPix-like binning on (theta, phi).
+    by contacting membrane beads.
+
+    Each contact point is spread over a small angular cone (smoothing_angle)
+    to account for the fact that discrete membrane beads represent a continuous
+    sheet. Uses a coarse (theta, phi) grid — n_bins=12 gives 15-deg resolution,
+    appropriate for ~300-800 discrete contacts.
 
     Returns: (coverage [0-1], n_contacts)
     """
     from scipy.spatial import cKDTree
+    from scipy.ndimage import maximum_filter
 
     mp_com = mp_positions.mean(axis=0)
 
@@ -284,13 +290,18 @@ def solid_angle_coverage(mp_positions, mem_positions, contact_cutoff=1.85, n_bin
     theta = np.arccos(np.clip(directions[:, 2], -1, 1))  # [0, pi]
     phi = np.arctan2(directions[:, 1], directions[:, 0])  # [-pi, pi]
 
-    # Create 2D histogram: n_bins in theta, 2*n_bins in phi
+    # Coarse grid: n_bins in theta, 2*n_bins in phi
     n_phi_bins = 2 * n_bins
     theta_edges = np.linspace(0, np.pi, n_bins + 1)
     phi_edges = np.linspace(-np.pi, np.pi, n_phi_bins + 1)
 
     hist, _, _ = np.histogram2d(theta, phi, bins=[theta_edges, phi_edges])
-    occupied = (hist > 0).astype(float)
+
+    # Dilate by 1 bin in each direction to bridge small gaps between
+    # discrete contact points (membrane beads are ~1 sigma apart, so
+    # neighboring beads on the sheet fill adjacent angular bins)
+    dilated = maximum_filter(hist, size=3, mode='wrap')
+    occupied = (dilated > 0).astype(float)
 
     # Weight each bin by its solid angle: sin(theta) * dtheta * dphi
     theta_centers = 0.5 * (theta_edges[:-1] + theta_edges[1:])
