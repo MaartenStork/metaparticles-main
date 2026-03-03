@@ -1,0 +1,65 @@
+# Membrane calibration run — equilibrate membrane alone before production
+# Run with the same variables as run_sphere.lmp, e.g.:
+# mpirun -np 4 lmp_radial -i calibrate_membrane.lmp -v ktilt 12.0 -v ksplay 1.0 -v rcut 2.5 -v wc 2.0 -v zeta 5.0
+
+variable v_rcut string ${rcut}
+variable v_splay string ${ksplay}
+variable v_tilt string ${ktilt}
+variable v_wc string ${wc}
+variable v_zeta string ${zeta}
+variable t_dump equal 10000
+
+units      lj
+atom_style hybrid sphere dipole molecular
+dimension   3
+boundary   p p p
+
+read_data ../structures/sphere_16.3_dist_0.8.lammps_60.data
+
+# Delete MP atoms (types 2-61), keep only membrane
+group MP_group type 2:61
+delete_atoms group MP_group bond yes
+group MP_group delete
+
+variable my_diameter equal 4.0
+set      type 1 diameter ${my_diameter}
+variable my_volume equal (4.0/3.0)*PI*((${my_diameter}*0.5)^3)
+variable my_mass equal 1.0
+variable my_density equal ${my_mass}/${my_volume}
+
+set      type 1 density ${my_density}
+print "m:${my_mass} V:${my_volume} rho:${my_density}" file info_mass.dat screen yes
+mass * ${my_mass}
+reset_timestep 0
+
+group mem_group type 1
+
+#********************************************************************************
+# pair style — membrane only
+#********************************************************************************
+pair_style membrane_sillanov2 ${v_rcut}
+# Default: zero-energy for all type pairs (data file still has 61 types)
+pair_coeff * * 0.0 1.0 0.0 0.0 ${v_rcut} ${v_wc} ${v_zeta} 0.0
+# Override membrane-membrane interaction
+pair_coeff 1 1 1.0 1.0 ${v_tilt} ${v_splay} ${v_rcut} ${v_wc} ${v_zeta} 0.0
+
+#********************************************************************************
+# output
+#********************************************************************************
+thermo ${t_dump}
+thermo_style custom step temp cpuremain pe vol
+dump coords all custom ${t_dump} calibrate_membrane.lammpstrj id type xu yu zu mux muy muz
+
+minimize 1.0e-4 1.0e-6 100 1000
+
+fix fNVE mem_group nve/sphere update dipole
+fix fLANG mem_group langevin 0.2 0.2 1.0 123 zero yes omega yes
+
+timestep 0.001
+run 1000
+
+timestep 0.01
+run 200000
+
+# Save the calibrated membrane state
+write_data calibrated_membrane.data nocoeff
