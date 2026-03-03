@@ -320,13 +320,18 @@ def endocytosis_score(mp_positions, mem_positions):
     """
     Score endocytosis using two physical signals:
 
-    Signal 1 – Penetration depth:  max(0, 1 - r/R)
+    Signal 1 – Penetration depth:
         r = MP COM distance from vesicle center, R = median membrane radius.
+        Inside (r/R <= 1):  depth = 1 - r/R  (linear gradient for BO)
+        Outside (r/R > 1):  depth = 0.1 * exp(-5 * (r/R - 1))
+        Linear inside preserves real gradient (r/R=0.47 scores higher than 0.59).
+        Exponential tail outside gives partial credit for membrane-engaged runs
+        (eval 4: r/R=1.01 -> 0.095) without rewarding truly detached runs
+        (r/R=1.5 -> 0.008).
 
     Signal 2 – Solid angle coverage:
-        Fraction of the unit sphere around the MP COM that is covered by
-        contacting membrane beads (within 1.85 cutoff).
-        0 = no wrapping, 0.5 = hemisphere, 1.0 = fully engulfed.
+        Fraction of the unit sphere around the MP COM covered by contacting
+        membrane beads (within 1.85 cutoff).
 
     Combined:  score = depth * (0.5 + 0.5 * coverage)
 
@@ -335,12 +340,15 @@ def endocytosis_score(mp_positions, mem_positions):
     mp_com = mp_positions.mean(axis=0)
     mem_com = mem_positions.mean(axis=0)
 
-    # Penetration depth
+    # Penetration depth — linear inside, exponential tail outside
     mem_radii = np.linalg.norm(mem_positions - mem_com, axis=1)
     R = np.median(mem_radii)
     r = np.linalg.norm(mp_com - mem_com)
     radial_ratio = r / R if R > 0 else 999.0
-    depth = max(0.0, 1.0 - radial_ratio)
+    if radial_ratio <= 1.0:
+        depth = 1.0 - radial_ratio
+    else:
+        depth = 0.1 * np.exp(-5.0 * (radial_ratio - 1.0))
 
     # Solid angle coverage
     coverage, n_contacts = solid_angle_coverage(mp_positions, mem_positions)
