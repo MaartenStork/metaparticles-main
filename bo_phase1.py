@@ -423,16 +423,11 @@ def run_bo(n_initial=10, n_iter=100, resume=True):
         return obj, metadata
 
     # Initial sampling (Sobol)
-    for i in range(start_eval, min(n_initial, total_evals)):
-        if i == start_eval and not train_X_list:
-            # Generate all initial points at once
-            sobol_X = draw_sobol_samples(bounds=bounds, n=n_initial, q=1).squeeze(1)
+    sobol_X = draw_sobol_samples(bounds=bounds, n=n_initial, q=1).squeeze(1)
 
-        idx_in_sobol = i
-        if idx_in_sobol < n_initial and not any(r["eval_id"] == i for r in all_results):
-            epsilons = sobol_X[idx_in_sobol].tolist() if i < n_initial else None
-            if epsilons is None:
-                break
+    for i in range(start_eval, min(n_initial, total_evals)):
+        if not any(r["eval_id"] == i for r in all_results):
+            epsilons = sobol_X[i].tolist()
             obj, metadata = evaluate(epsilons, i)
             train_X_list.append(epsilons)
             train_Y_list.append(obj)
