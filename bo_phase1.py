@@ -27,7 +27,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 LAMMPS_BINARY = os.path.join(PROJECT_ROOT, "lammps-22Jul2025", "build", "lmp")
 TEMPLATE_LMP = os.path.join(PROJECT_ROOT, "lammps_script", "run_sphere.lmp")
 MP_DATA_FILE = os.path.join(PROJECT_ROOT, "MP_datafile_massimiliano", "MP60_eq.data")
-STRUCTURE_FILE = os.path.join(PROJECT_ROOT, "structures", "sphere_16.3_dist_0.8.lammps_60.data")
+STRUCTURE_FILE = os.path.join(PROJECT_ROOT, "lammps_script", "merged_structure.data")
 RUN_DIR = os.path.join(PROJECT_ROOT, "bo_runs")
 
 EPS_BOUNDS = [1.0, 9.0]  # search range for each epsilon
@@ -252,26 +252,52 @@ def parse_last_frame(dump_path):
 
 def endocytosis_score(mp_positions, mem_positions):
     """
-    Did the MP pass through the membrane?
+    Score endocytosis using two physical signals (paper-inspired):
 
-    Score = sigmoid(r/R), where r = MP COM distance from membrane center,
-    R = median membrane radius. ~1 when inside, ~0 when outside.
+    Signal 1 – Penetration depth:  max(0, 1 - r/R)
+        r = MP COM distance from vesicle center, R = median membrane radius.
+
+    Signal 2 – Wrapping quality (NMP from Paesani & Ilie 2025):
+        Count membrane beads within 1.85 sigma of any MP bead.
+        ~3000 contacts = fully wrapped.  Normalized to [0, 1].
+
+    Combined:  score = depth * (0.5 + 0.5 * wrapping)
+        - Inside + wrapped  → high score
+        - Inside + ruptured → medium score (depth counts, but wrapping penalizes)
+        - Outside            → zero
 
     Returns: (score, details_dict)
     """
+    from scipy.spatial import cKDTree
+
     mp_com = mp_positions.mean(axis=0)
 
     mem_com = mem_positions.mean(axis=0)
     mem_dists = np.linalg.norm(mem_positions - mem_com, axis=1)
-    mem_radius = np.median(mem_dists)
+    mem_radius = float(np.median(mem_dists))
 
     mp_dist_from_center = float(np.linalg.norm(mp_com - mem_com))
-    radial_ratio = mp_dist_from_center / mem_radius if mem_radius > 0 else 999
-    score = max(0.0, 1.0 - radial_ratio)
+    radial_ratio = mp_dist_from_center / mem_radius if mem_radius > 0 else 999.0
+
+    # Signal 1: penetration depth
+    depth = max(0.0, 1.0 - radial_ratio)
+
+    # Signal 2: wrapping contacts (NMP, cutoff = cosine/squared rc = 1.85)
+    mp_tree = cKDTree(mp_positions)
+    mem_tree = cKDTree(mem_positions)
+    contact_lists = mp_tree.query_ball_tree(mem_tree, r=1.85)
+    n_contacts = sum(len(c) for c in contact_lists)
+    wrapping = min(1.0, n_contacts / 3000.0)
+
+    # Combined score
+    score = depth * (0.5 + 0.5 * wrapping)
 
     details = {
         "radial_ratio": round(radial_ratio, 4),
-        "mem_radius": round(float(mem_radius), 3),
+        "mem_radius": round(mem_radius, 3),
+        "n_contacts": n_contacts,
+        "wrapping": round(wrapping, 4),
+        "depth": round(depth, 4),
     }
 
     return float(np.clip(score, 0.0, 1.0)), details
@@ -280,11 +306,6 @@ def endocytosis_score(mp_positions, mem_positions):
 def extract_objective(run_dir):
     """
     Compute objective from the last frame of the trajectory.
-
-    Uses clustering + solid-angle coverage to produce a continuous [0, 1] score
-    that naturally distinguishes all interaction modes (bounced, wrapped,
-    stuck, half-through, fully endocytosed, ruptured).
-
     Returns (objective_value, metadata_dict).
     """
     dump_path = os.path.join(run_dir, "position.lammpstrj")
