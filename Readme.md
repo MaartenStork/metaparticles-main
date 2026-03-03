@@ -1,34 +1,28 @@
-# Pipeline
+# Metaparticles
 
-## Installation
-You have to have compiled your custom installation of lammps with the new potential, see readme.md in potential_files/
+Bayesian optimization of anisotropic nanoparticle-membrane interactions for endocytosis. A coarse-grained metaparticle (60 beads, 3 azimuthal groups) interacts with a lipid vesicle via tunable cosine/squared + WCA potentials. BO (BoTorch GP + EI) searches over the 3 group epsilon values to maximize membrane wrapping and penetration depth.
 
-## Initial configurations
-The idea is to combine membrane initial configuration contained in `membrane_data/` with MP data in `MP_datafile_massimiliano`. The script `write_structures.py` can generate initial configurations for single or multiple MP on plane (or spherical vesicle).
+Built on LAMMPS with the `membrane_sillanov2` pair style for the lipid bilayer.
 
-The generate combined datafile will be in `structures/`.
+## Quick start
 
-## Run Simulation
-Move to `lammps_script` and run `mpirun -np 4 lmp_bin -i plane_MP.lmp -v ktilt 12.0 -v ksplay 1.0 -v rcut 2.5 -v wc 2.0 -v zeta 5.0`
+```bash
+# 1. Compile LAMMPS with the custom potential (see potential_files/)
+# 2. Generate initial structures
+python write_structures.py
 
+# 3. Calibrate the membrane
+cd lammps_script && python merge_calibrated.py
 
-
-# ISSUES
-The membrane is stable but it seems to be some issues with the initialization of Metaparticles. In particular lots of warning for FENE bonds. Maybe I missed some parameters, check that!
-
-# How to collab on Github
-1. Create Your Branch
-Never work directly on the main branch. Create a new branch.
-
-```Bash
-git checkout -b feature/your-feature-name
+# 4. Run Bayesian optimization
+python bo_phase1.py --n-initial 10 --n-iter 100
 ```
 
-2. Commit Your Changes
-As you work, save your progress with clear, concise commit messages.
+## Structure
 
-```Bash
-git add .
-git commit -m "Brief description of what you changed"
-git push
-```
+- `bo_phase1.py` -- BO loop (Sobol init + GP/EI acquisition)
+- `lammps_script/` -- LAMMPS input templates and membrane calibration
+- `analyze_bo.ipynb` -- visualization of BO results, potential curves, wrapping analysis
+- `structures/` -- generated initial configurations
+- `MP_datafile_massimiliano/` -- metaparticle bead coordinates
+- `potential_files/` -- custom LAMMPS pair style source

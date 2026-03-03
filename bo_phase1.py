@@ -250,57 +250,100 @@ def parse_last_frame(dump_path):
     return atoms
 
 
-def endocytosis_score(mp_positions, mem_positions):
+def solid_angle_coverage(mp_positions, mem_positions, contact_cutoff=1.85, n_bins=50):
     """
-    Score endocytosis using two physical signals (paper-inspired):
+    Compute the fraction of the unit sphere around the MP COM that is covered
+    by contacting membrane beads. Uses a HEALPix-like binning on (theta, phi).
 
-    Signal 1 – Penetration depth:  max(0, 1 - r/R)
-        r = MP COM distance from vesicle center, R = median membrane radius.
-
-    Signal 2 – Wrapping quality (NMP from Paesani & Ilie 2025):
-        Count membrane beads within 1.85 sigma of any MP bead.
-        ~3000 contacts = fully wrapped.  Normalized to [0, 1].
-
-    Combined:  score = depth * (0.5 + 0.5 * wrapping)
-        - Inside + wrapped  → high score
-        - Inside + ruptured → medium score (depth counts, but wrapping penalizes)
-        - Outside            → zero
-
-    Returns: (score, details_dict)
+    Returns: (coverage [0-1], n_contacts)
     """
     from scipy.spatial import cKDTree
 
     mp_com = mp_positions.mean(axis=0)
 
-    mem_com = mem_positions.mean(axis=0)
-    mem_dists = np.linalg.norm(mem_positions - mem_com, axis=1)
-    mem_radius = float(np.median(mem_dists))
-
-    mp_dist_from_center = float(np.linalg.norm(mp_com - mem_com))
-    radial_ratio = mp_dist_from_center / mem_radius if mem_radius > 0 else 999.0
-
-    # Signal 1: penetration depth
-    depth = max(0.0, 1.0 - radial_ratio)
-
-    # Signal 2: wrapping contacts (NMP, cutoff = cosine/squared rc = 1.85)
+    # Find membrane beads within cutoff of any MP bead
     mp_tree = cKDTree(mp_positions)
     mem_tree = cKDTree(mem_positions)
-    contact_lists = mp_tree.query_ball_tree(mem_tree, r=1.85)
-    n_contacts = sum(len(c) for c in contact_lists)
-    wrapping = min(1.0, n_contacts / 3000.0)
+    contact_lists = mp_tree.query_ball_tree(mem_tree, r=contact_cutoff)
+    contact_ids = set()
+    for cl in contact_lists:
+        contact_ids.update(cl)
+    n_contacts = len(contact_ids)
 
-    # Combined score
-    score = depth * (0.5 + 0.5 * wrapping)
+    if n_contacts == 0:
+        return 0.0, 0
+
+    # Direction vectors from MP COM to each contacting membrane bead
+    contact_pos = mem_positions[list(contact_ids)]
+    directions = contact_pos - mp_com
+    norms = np.linalg.norm(directions, axis=1, keepdims=True)
+    norms = np.clip(norms, 1e-10, None)
+    directions = directions / norms
+
+    # Bin onto a grid in (theta, phi) space
+    theta = np.arccos(np.clip(directions[:, 2], -1, 1))  # [0, pi]
+    phi = np.arctan2(directions[:, 1], directions[:, 0])  # [-pi, pi]
+
+    # Create 2D histogram: n_bins in theta, 2*n_bins in phi
+    n_phi_bins = 2 * n_bins
+    theta_edges = np.linspace(0, np.pi, n_bins + 1)
+    phi_edges = np.linspace(-np.pi, np.pi, n_phi_bins + 1)
+
+    hist, _, _ = np.histogram2d(theta, phi, bins=[theta_edges, phi_edges])
+    occupied = (hist > 0).astype(float)
+
+    # Weight each bin by its solid angle: sin(theta) * dtheta * dphi
+    theta_centers = 0.5 * (theta_edges[:-1] + theta_edges[1:])
+    dtheta = theta_edges[1] - theta_edges[0]
+    dphi = phi_edges[1] - phi_edges[0]
+    solid_angle_weights = np.sin(theta_centers) * dtheta * dphi  # shape (n_bins,)
+
+    # Total solid angle of occupied bins / 4*pi
+    covered = np.sum(occupied * solid_angle_weights[:, np.newaxis])
+    coverage = covered / (4 * np.pi)
+
+    return float(np.clip(coverage, 0.0, 1.0)), int(n_contacts)
+
+
+def endocytosis_score(mp_positions, mem_positions):
+    """
+    Score endocytosis using two physical signals:
+
+    Signal 1 – Penetration depth:  max(0, 1 - r/R)
+        r = MP COM distance from vesicle center, R = median membrane radius.
+
+    Signal 2 – Solid angle coverage:
+        Fraction of the unit sphere around the MP COM that is covered by
+        contacting membrane beads (within 1.85 cutoff).
+        0 = no wrapping, 0.5 = hemisphere, 1.0 = fully engulfed.
+
+    Combined:  score = depth * (0.5 + 0.5 * coverage)
+
+    Returns: (score, details_dict)
+    """
+    mp_com = mp_positions.mean(axis=0)
+    mem_com = mem_positions.mean(axis=0)
+
+    # Penetration depth
+    mem_radii = np.linalg.norm(mem_positions - mem_com, axis=1)
+    R = np.median(mem_radii)
+    r = np.linalg.norm(mp_com - mem_com)
+    radial_ratio = r / R if R > 0 else 999.0
+    depth = max(0.0, 1.0 - radial_ratio)
+
+    # Solid angle coverage
+    coverage, n_contacts = solid_angle_coverage(mp_positions, mem_positions)
+
+    score = depth * (0.5 + 0.5 * coverage)
 
     details = {
-        "radial_ratio": round(radial_ratio, 4),
-        "mem_radius": round(mem_radius, 3),
-        "n_contacts": n_contacts,
-        "wrapping": round(wrapping, 4),
-        "depth": round(depth, 4),
+        "radial_ratio": float(radial_ratio),
+        "depth": float(depth),
+        "coverage": float(coverage),
+        "n_contacts": int(n_contacts),
+        "membrane_R": float(R),
     }
-
-    return float(np.clip(score, 0.0, 1.0)), details
+    return float(score), details
 
 
 def extract_objective(run_dir):
