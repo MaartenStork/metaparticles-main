@@ -263,7 +263,6 @@ def solid_angle_coverage(mp_positions, mem_positions, contact_cutoff=1.85, n_bin
     Returns: (coverage [0-1], n_contacts)
     """
     from scipy.spatial import cKDTree
-    from scipy.ndimage import maximum_filter
 
     mp_com = mp_positions.mean(axis=0)
 
@@ -297,11 +296,7 @@ def solid_angle_coverage(mp_positions, mem_positions, contact_cutoff=1.85, n_bin
 
     hist, _, _ = np.histogram2d(theta, phi, bins=[theta_edges, phi_edges])
 
-    # Dilate by 1 bin in each direction to bridge small gaps between
-    # discrete contact points (membrane beads are ~1 sigma apart, so
-    # neighboring beads on the sheet fill adjacent angular bins)
-    dilated = maximum_filter(hist, size=3, mode='wrap')
-    occupied = (dilated > 0).astype(float)
+    occupied = (hist > 0).astype(float)
 
     # Weight each bin by its solid angle: sin(theta) * dtheta * dphi
     theta_centers = 0.5 * (theta_edges[:-1] + theta_edges[1:])
@@ -353,7 +348,13 @@ def endocytosis_score(mp_positions, mem_positions):
     # Solid angle coverage
     coverage, n_contacts = solid_angle_coverage(mp_positions, mem_positions)
 
-    score = depth * (0.5 + 0.5 * coverage)
+    # Membrane split check: 2+ clusters = membrane pinched off a pocket
+    from sklearn.cluster import DBSCAN
+    labels = DBSCAN(eps=1.5, min_samples=5).fit_predict(mem_positions)
+    n_clusters = len(set(labels) - {-1})
+    split_bonus = 1.0 if n_clusters >= 2 else 0.0
+
+    score = depth * (0.5 + 0.5 * coverage) * (1.0 + split_bonus)
 
     details = {
         "radial_ratio": float(radial_ratio),
@@ -361,6 +362,7 @@ def endocytosis_score(mp_positions, mem_positions):
         "coverage": float(coverage),
         "n_contacts": int(n_contacts),
         "membrane_R": float(R),
+        "n_membrane_clusters": int(n_clusters),
     }
     return float(score), details
 
