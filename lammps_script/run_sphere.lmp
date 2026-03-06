@@ -58,7 +58,7 @@ pair_coeff 1 1 membrane_sillanov2 1.0 1.0 ${v_tilt} ${v_splay} ${v_rcut} ${v_wc}
 # Default: all MP-MP pairs (LJ)
 pair_coeff 2*61 2*61 lj/cut 1.0 2.5 2.5
 # Default: all membrane-MP pairs (cosine/squared)
-pair_coeff 1 2*61 cosine/squared 1.0 1.75 1.85 wca
+pair_coeff 1 2*61 cosine/squared 1.0 1.75 1.80 wca
 # Override specific MP beads here, e.g.:
 # pair_coeff 1 5 cosine/squared 2.0 1.75 1.85
 pair_modify shift yes
@@ -90,4 +90,4 @@ timestep   0.001
 run 1000
 
 timestep   0.01
-run 500000
+run 1000000
